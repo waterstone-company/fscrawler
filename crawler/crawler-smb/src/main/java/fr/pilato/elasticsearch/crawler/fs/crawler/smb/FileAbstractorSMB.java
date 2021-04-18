@@ -79,7 +79,9 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     @Override
     public InputStream getInputStream(FileAbstractModel file) throws Exception {
         if (file.isFile()) {
-            return share.openFile(file.getFullpath(), EnumSet.of(AccessMask.GENERIC_READ),
+            String fullPath = file.getFullpath();
+            fullPath = correctionPath(fullPath);
+            return share.openFile(fullPath, EnumSet.of(AccessMask.GENERIC_READ),
                     null,
                     SMB2ShareAccess.ALL,
                     SMB2CreateDisposition.FILE_OPEN,
@@ -92,7 +94,11 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     @Override
     public Collection<FileAbstractModel> getFiles(String dir) throws Exception {
 
-        logger.debug("Listing local files from {}", dir);
+        //修正路径
+        dir = correctionPath(dir);
+
+
+        logger.debug("Listing smb files from {}", dir);
         List<FileIdBothDirectoryInformation> ls;
 
         Directory directory = share.openDirectory(dir, EnumSet.of(AccessMask.GENERIC_READ),
@@ -109,9 +115,10 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
         Collection<FileAbstractModel> result = new ArrayList<>(ls.size());
         // Iterate other files
         // We ignore here all files like . and ..
+        String finalDir = dir;
         result.addAll(ls.stream().filter(file -> !".".equals(file.getFileName()) &&
                 !"..".equals(file.getFileName()))
-                .map(file -> toFileAbstractModel(dir, share.open(dir + "/" + file.getFileName(), EnumSet.of(AccessMask.GENERIC_READ),
+                .map(file -> toFileAbstractModel(finalDir, share.open(finalDir + "/" + file.getFileName(), EnumSet.of(AccessMask.GENERIC_READ),
                         null,
                         SMB2ShareAccess.ALL,
                         SMB2CreateDisposition.FILE_OPEN,
@@ -124,11 +131,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
 
     @Override
     public boolean exists(String dir) {
-        if (dir.startsWith("//")) {
-            String[] path = dir.split("/");
-            dir = dir.substring(3 + path[2].length() + path[3].length());
-            logger.info("new dir : {}", dir);
-        }
+        dir = correctionPath(dir);
         return share.fileExists(dir) || share.folderExists(dir);
     }
 
@@ -141,6 +144,15 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     public void close() throws Exception {
         share.close();
         client.close();
+    }
+
+
+    private String correctionPath(String dir) {
+        if (dir.startsWith("//")) {
+            String[] path = dir.split("/");
+            dir = dir.substring(3 + path[2].length() + path[3].length());
+        }
+        return dir;
     }
 
 

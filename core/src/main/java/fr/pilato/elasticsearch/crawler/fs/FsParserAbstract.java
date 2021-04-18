@@ -120,13 +120,7 @@ public abstract class FsParserAbstract extends FsParser {
                 path = buildFileAbstractor();
                 path.open();
 
-                String relativePath  = fsSettings.getFs().getUrl();
-                String[] paths = relativePath.split("/");
-                if (fsSettings.getServer().getProtocol().equals(Server.PROTOCOL.SMB)) {
-                    relativePath = relativePath.substring(3 + paths[2].length() + paths[3].length());
-                }
-
-                if (!path.exists(relativePath)) {
+                if (!path.exists(fsSettings.getFs().getUrl())) {
                     throw new RuntimeException(fsSettings.getFs().getUrl() + " doesn't exists.");
                 }
 
@@ -146,7 +140,7 @@ public abstract class FsParserAbstract extends FsParser {
                     scanDate = LocalDateTime.MIN;
                 }
 
-                addFilesRecursively(path, relativePath, scanDate);
+                addFilesRecursively(path, fsSettings.getFs().getUrl(), scanDate);
 
                 updateFsJob(fsSettings.getName(), scanDatenew);
             } catch (Exception e) {
