@@ -9,3 +9,4 @@ target
 *.iml
 /.run
 /logs/
+/venv/
