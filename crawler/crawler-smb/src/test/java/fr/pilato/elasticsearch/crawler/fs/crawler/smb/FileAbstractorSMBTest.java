@@ -1,6 +1,7 @@
 package fr.pilato.elasticsearch.crawler.fs.crawler.smb;
 
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractModel;
+import fr.pilato.elasticsearch.crawler.fs.settings.Fs;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
 import fr.pilato.elasticsearch.crawler.fs.settings.Server;
 import fr.pilato.elasticsearch.crawler.fs.test.framework.AbstractFSCrawlerTestCase;
@@ -20,16 +21,17 @@ public class FileAbstractorSMBTest extends AbstractFSCrawlerTestCase {
         String host = "10.211.55.7";
         String user = "lzwcyd";
         String pass = "123456";
-        String serverName = "model";
+        String url = "//Desktop/model";
         FsSettings fsSettings = FsSettings.builder("foo")
                 .setServer(
                         Server.builder()
                                 .setHostname(host)
                                 .setUsername(user)
                                 .setPassword(pass)
-                                .setServerName(serverName)
                                 .build()
-                )
+                ).setFs(Fs.builder()
+                        .setUrl(url)
+                        .build())
                 .build();
         FileAbstractorSMB smb = new FileAbstractorSMB(fsSettings);
         smb.open();
