@@ -303,19 +303,25 @@ public class FsCrawlerUtil {
     }
 
     public static String computeVirtualPathName(String rootPath, String realPath) {
-        String result = getPathSeparator(rootPath);
-        if (realPath.startsWith(rootPath) && realPath.length() > rootPath.length()) {
-            if (rootPath.equals("/")) {
-                // "/" is very common for FTP
-                result = realPath;
-            } else {
-                result = realPath.substring(rootPath.length());
-            }
+        if (rootPath != null) {
+            rootPath = rootPath.replace("\\", "/");
+        }
+        if (realPath != null) {
+            realPath = realPath.replace("\\", "/");
         }
 
-        logger.debug("computeVirtualPathName({}, {}) = {}", rootPath, realPath, result);
-        return result;
-    }
+        String result = "/";
+            if (realPath != null && rootPath != null && realPath.length() > rootPath.length()) {
+                if ("/".equals(rootPath)) {
+                    result = realPath;
+                } else {
+                    result = realPath.substring(rootPath.length());
+                }
+            }
+
+            logger.debug("computeVirtualPathName({}, {}) = {}", rootPath, realPath, result);
+            return result.startsWith("/") ? result : "/".concat(result);
+        }
 
     public static LocalDateTime getCreationTime(File file) {
         LocalDateTime time;

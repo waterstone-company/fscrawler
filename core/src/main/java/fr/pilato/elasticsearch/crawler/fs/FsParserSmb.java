@@ -1,6 +1,7 @@
 package fr.pilato.elasticsearch.crawler.fs;
 
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractor;
+import fr.pilato.elasticsearch.crawler.fs.crawler.smb.FileAbstractorSMB;
 import fr.pilato.elasticsearch.crawler.fs.crawler.ssh.FileAbstractorSSH;
 import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerDocumentService;
 import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerManagementService;
@@ -16,6 +17,6 @@ public class FsParserSmb extends FsParserAbstract{
 
     @Override
     protected FileAbstractor<?> buildFileAbstractor() {
-        return new FileAbstractorSSH(fsSettings);
+        return new FileAbstractorSMB(fsSettings);
     }
 }
