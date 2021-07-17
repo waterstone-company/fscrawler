@@ -21,13 +21,13 @@ package fr.pilato.elasticsearch.crawler.fs.settings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Objects;
 
 public class Server {
 
     public static final class PROTOCOL {
         public static final String LOCAL = "local";
+        public static final String SMB = "smb";
         public static final String SSH = "ssh";
         public static final int SSH_PORT = 22;
     }
@@ -36,12 +36,13 @@ public class Server {
 
     }
 
-    private Server(String hostname, int port, String username, String password, String protocol, String pemPath) {
+    private Server(String hostname, int port, String username, String password, String protocol, String serverName, String pemPath) {
         this.hostname = hostname;
         this.port = port;
         this.username = username;
         this.password = password;
         this.protocol = protocol;
+        this.serverName = serverName;
         this.pemPath = pemPath;
     }
 
@@ -51,6 +52,7 @@ public class Server {
     @JsonIgnore
     private String password;
     private String protocol = PROTOCOL.LOCAL;
+    private String serverName;
     private String pemPath;
 
     public String getHostname() {
@@ -95,6 +97,14 @@ public class Server {
         this.protocol = protocol;
     }
 
+    public String getServerName() {
+        return serverName;
+    }
+
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
+    }
+
     public String getPemPath() {
         return pemPath;
     }
@@ -113,6 +123,7 @@ public class Server {
         private String username = null;
         private String password = null;
         private String protocol = PROTOCOL.LOCAL;
+        private String serverName = null;
         private String pemPath = null;
 
         public Builder setHostname(String hostname) {
@@ -140,13 +151,18 @@ public class Server {
             return this;
         }
 
+        public Builder setServerName(String serverName) {
+            this.serverName = serverName;
+            return this;
+        }
+
         public Builder setPemPath(String pemPath) {
             this.pemPath = pemPath;
             return this;
         }
 
         public Server build() {
-            return new Server(hostname, port, username, password, protocol, pemPath);
+            return new Server(hostname, port, username, password, protocol, serverName, pemPath);
         }
     }
 
@@ -162,6 +178,7 @@ public class Server {
         if (!Objects.equals(username, server.username)) return false;
         // We can't really test the password as it may be obfuscated
         if (!Objects.equals(protocol, server.protocol)) return false;
+        if (!Objects.equals(serverName, server.serverName)) return false;
         return Objects.equals(pemPath, server.pemPath);
 
     }
@@ -172,6 +189,7 @@ public class Server {
         result = 31 * result + port;
         result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (protocol != null ? protocol.hashCode() : 0);
+        result = 31 * result + (serverName != null ? serverName.hashCode() : 0);
         result = 31 * result + (pemPath != null ? pemPath.hashCode() : 0);
         return result;
     }
@@ -182,6 +200,7 @@ public class Server {
                 ", port=" + port +
                 ", username='" + username + '\'' +
                 ", protocol='" + protocol + '\'' +
+                ", serverName='" + serverName + '\'' +
                 ", pemPath='" + pemPath + '\'' +
                 '}';
     }
