@@ -17,6 +17,7 @@
         <module>crawler-abstract</module>
         <module>crawler-fs</module>
         <module>crawler-ssh</module>
+        <module>crawler-smb</module>
     </modules>
 
     <build>

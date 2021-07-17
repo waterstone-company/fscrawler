@@ -5,6 +5,7 @@ import com.hierynomus.msdtyp.SecurityInformation;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
+import com.hierynomus.protocol.commons.EnumWithValue;
 import com.hierynomus.security.bc.BCSecurityProvider;
 import com.hierynomus.smbj.SMBClient;
 import com.hierynomus.smbj.SmbConfig;
@@ -18,12 +19,14 @@ import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractModel;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractor;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
 import fr.pilato.elasticsearch.crawler.fs.settings.Server;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
@@ -44,8 +47,19 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
 
     @Override
     public FileAbstractModel toFileAbstractModel(String path, DiskEntry file) {
+
+        int permissions = 777;
+
+        //TODO 修正权限 file.getFileInformation().getAccessInformation().getAccessFlags()
+
+        EnumSet<AccessMask> list = EnumWithValue.EnumUtils.toEnumSet(file.getFileInformation().getAccessInformation().getAccessFlags(), AccessMask.class);
+
+
+        //此处这样取文件/文件夹名的原因为：file.getFileInformation().getNameInformation() 取到的值永远为null
+        String fileName = file.getUncPath().substring(file.getUncPath().lastIndexOf("\\") + 1);
+
         return new FileAbstractModel(
-                file.getFileInformation().getNameInformation(),
+                fileName,
                 !file.getFileInformation().getStandardInformation().isDirectory(),
                 // We are using here the local TimeZone as a reference. If the remote system is under another TZ, this might cause issues
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(file.getFileInformation().getBasicInformation().getLastWriteTime().toEpochMillis()), ZoneId.systemDefault()),
@@ -55,20 +69,24 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(file.getFileInformation().getBasicInformation().getCreationTime().toEpochMillis()), ZoneId.systemDefault()),
                 FilenameUtils.getExtension(file.getFileInformation().getNameInformation()),
                 path,
-                path.concat("/").concat(file.getFileInformation().getNameInformation()),
+                path.concat("/").concat(fileName),
                 file.getFileInformation().getStandardInformation().getAllocationSize(),
                 file.getSecurityInformation(Collections.singleton(SecurityInformation.OWNER_SECURITY_INFORMATION)).getOwnerSid().toString(),
                 file.getSecurityInformation(Collections.singleton(SecurityInformation.GROUP_SECURITY_INFORMATION)).getGroupSid().toString(),
-                file.getFileInformation().getAccessInformation().getAccessFlags());
+                permissions);
     }
 
     @Override
     public InputStream getInputStream(FileAbstractModel file) throws Exception {
-        return share.openFile(file.getFullpath(), EnumSet.of(AccessMask.GENERIC_READ),
-                null,
-                SMB2ShareAccess.ALL,
-                SMB2CreateDisposition.FILE_OPEN,
-                null).getInputStream();
+        if (file.isFile()) {
+            return share.openFile(file.getFullpath(), EnumSet.of(AccessMask.GENERIC_READ),
+                    null,
+                    SMB2ShareAccess.ALL,
+                    SMB2CreateDisposition.FILE_OPEN,
+                    null).getInputStream();
+        } else {
+            return new ByteArrayInputStream(file.getName().getBytes());
+        }
     }
 
     @Override
@@ -106,6 +124,11 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
 
     @Override
     public boolean exists(String dir) {
+        if (dir.startsWith("//")) {
+            String[] path = dir.split("/");
+            dir = dir.substring(3 + path[2].length() + path[3].length());
+            logger.info("new dir : {}", dir);
+        }
         return share.fileExists(dir) || share.folderExists(dir);
     }
 
@@ -127,13 +150,18 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
         SmbConfig smbConfig = SmbConfig.builder()
                 //SMB3.0 use BCSecurityProvider
                 .withSecurityProvider(new BCSecurityProvider())
+                .withTimeout(12, TimeUnit.SECONDS) // Timeout sets Read, Write, and Transact timeouts (default is 60 seconds)
+                .withSoTimeout(18, TimeUnit.SECONDS) // Socket Timeout (default is 0 seconds, blocks forever)
                 .build();
 
         client = new SMBClient(smbConfig);
         AuthenticationContext ac = new AuthenticationContext(server.getUsername(), server.getPassword().toCharArray(), server.getHostname());
         Connection connection = client.connect(server.getHostname());
         Session session = connection.authenticate(ac);
-        return (DiskShare) session.connectShare(fsSettings.getServer().getServerName());
+        String url = fsSettings.getFs().getUrl();
+        //   //6E64/model      //6E64/model/test
+        String serverName = url.split("/")[3];
+        return (DiskShare) session.connectShare(serverName);
 
     }
 }

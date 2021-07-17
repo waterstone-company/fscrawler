@@ -19,32 +19,23 @@
 
 package fr.pilato.elasticsearch.crawler.fs;
 
-import fr.pilato.elasticsearch.crawler.fs.beans.Attributes;
-import fr.pilato.elasticsearch.crawler.fs.beans.Doc;
-import fr.pilato.elasticsearch.crawler.fs.beans.DocParser;
-import fr.pilato.elasticsearch.crawler.fs.beans.FsJob;
-import fr.pilato.elasticsearch.crawler.fs.beans.FsJobFileHandler;
-import fr.pilato.elasticsearch.crawler.fs.beans.ScanStatistic;
+import fr.pilato.elasticsearch.crawler.fs.beans.*;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractModel;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractor;
 import fr.pilato.elasticsearch.crawler.fs.framework.ByteSizeValue;
 import fr.pilato.elasticsearch.crawler.fs.framework.FSCrawlerLogger;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.*;
 import fr.pilato.elasticsearch.crawler.fs.framework.OsValidator;
 import fr.pilato.elasticsearch.crawler.fs.framework.SignTool;
 import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerDocumentService;
 import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerManagementService;
 import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerService;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
+import fr.pilato.elasticsearch.crawler.fs.settings.Server;
 import fr.pilato.elasticsearch.crawler.fs.tika.TikaDocParser;
 import fr.pilato.elasticsearch.crawler.fs.tika.XmlDocParser;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -55,8 +46,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
-
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class FsParserAbstract extends FsParser {
     private static final Logger logger = LogManager.getLogger(FsParserAbstract.class);
@@ -129,7 +120,13 @@ public abstract class FsParserAbstract extends FsParser {
                 path = buildFileAbstractor();
                 path.open();
 
-                if (!path.exists(fsSettings.getFs().getUrl())) {
+                String relativePath  = fsSettings.getFs().getUrl();
+                String[] paths = relativePath.split("/");
+                if (fsSettings.getServer().getProtocol().equals(Server.PROTOCOL.SMB)) {
+                    relativePath = relativePath.substring(3 + paths[2].length() + paths[3].length());
+                }
+
+                if (!path.exists(relativePath)) {
                     throw new RuntimeException(fsSettings.getFs().getUrl() + " doesn't exists.");
                 }
 
@@ -149,7 +146,7 @@ public abstract class FsParserAbstract extends FsParser {
                     scanDate = LocalDateTime.MIN;
                 }
 
-                addFilesRecursively(path, fsSettings.getFs().getUrl(), scanDate);
+                addFilesRecursively(path, relativePath, scanDate);
 
                 updateFsJob(fsSettings.getName(), scanDatenew);
             } catch (Exception e) {
