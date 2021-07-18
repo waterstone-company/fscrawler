@@ -77,6 +77,10 @@ public class FsCrawlerValidator {
                 FsCrawlerUtil.isNullOrEmpty(settings.getServer().getUsername())) {
                 logger.error("When using FTP, you need to set a username and probably a password. Disabling crawler");
                 return true;
+            } else if (Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol()) &&
+                    FsCrawlerUtil.isNullOrEmpty(settings.getServer().getUsername())) {
+                logger.error("When using SMB, you need to set a username and probably a password. Disabling crawler");
+                return true;
             }
         }
 
