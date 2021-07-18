@@ -41,8 +41,8 @@
         <elasticsearch6.version>6.8.15</elasticsearch6.version>
         <elasticsearch.version>${elasticsearch7.version}</elasticsearch.version>
 
-        <tika.version>1.26</tika.version>
-        <jackson.version>2.12.3</jackson.version>
+        <tika.version>1.27</tika.version>
+        <jackson.version>2.12.4</jackson.version>
         <log4j.version>2.14.1</log4j.version>
         <jansi.version>2.3.3</jansi.version>
         <jersey.version>3.0.2</jersey.version>
@@ -102,7 +102,9 @@
         <sonatype.password>${env.SONATYPE_PASS}</sonatype.password>
 
         <!-- For DockerHub to push images -->
+        <!--suppress UnresolvedMavenProperty -->
         <env.DOCKER_USERNAME>${DOCKER_USERNAME}</env.DOCKER_USERNAME>
+        <!--suppress UnresolvedMavenProperty -->
         <env.DOCKER_PASSWORD>${DOCKER_PASSWORD}</env.DOCKER_PASSWORD>
         <docker.push.username>${env.DOCKER_USERNAME}</docker.push.username>
         <docker.push.password>${env.DOCKER_PASSWORD}</docker.push.password>
@@ -276,7 +278,7 @@
                 <plugin>
                     <groupId>io.fabric8</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
-                    <version>0.36.0</version>
+                    <version>0.36.1</version>
                 </plugin>
 
                 <!-- For IT using Docker Compose -->
@@ -551,6 +553,11 @@
             </dependency>
             <dependency>
                 <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <artifactId>fscrawler-crawler-ftp</artifactId>
+                <version>2.7-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.pilato.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-crawler-ssh</artifactId>
                 <version>2.7-SNAPSHOT</version>
             </dependency>
@@ -613,6 +620,12 @@
                 <artifactId>snakeyaml</artifactId>
                 <version>${snakeyaml.version}</version>
             </dependency>
+            <!-- this is needed for Tika 1.27 vs Jackson 2.12.3 -->
+            <dependency>
+                <groupId>com.fasterxml.woodstox</groupId>
+                <artifactId>woodstox-core</artifactId>
+                <version>6.2.6</version>
+            </dependency>
 
             <!-- This is needed to compile on my machine :( -->
             <dependency>
@@ -656,7 +669,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
-                <version>1.20</version>
+                <version>1.21</version>
             </dependency>
 
             <dependency>
@@ -728,7 +741,7 @@
             <dependency>
                 <groupId>org.xerial</groupId>
                 <artifactId>sqlite-jdbc</artifactId>
-                <version>3.34.0</version>
+                <version>3.36.0.1</version>
             </dependency>
 
             <!--
@@ -875,6 +888,12 @@
                 <optional>true</optional>
             </dependency>
             <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-iostreams</artifactId>
+                <version>${log4j.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
                 <groupId>org.fusesource.jansi</groupId>
                 <artifactId>jansi</artifactId>
                 <version>${jansi.version}</version>
@@ -892,7 +911,26 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.10.0</version>
+                <version>2.11.0</version>
+            </dependency>
+
+            <!-- FTP -->
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>3.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockftpserver</groupId>
+                <artifactId>MockFtpServer</artifactId>
+                <version>2.8.0</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Used by elasticsearch client and tika parsers -->
@@ -954,7 +992,7 @@
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
                 <artifactId>websocket-client</artifactId>
-                <version>9.4.42.v20210604</version>
+                <version>9.4.43.v20210629</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
