@@ -219,6 +219,10 @@ public class FsCrawlerCli {
                 }
             }
 
+            if (fsSettings.getServer().getProtocol().equals(PROTOCOL.SMB) && StringUtils.isEmpty(fsSettings.getServer().getUsername())) {
+                fsSettings.getServer().setUsername("Guest");
+            }
+
             if (fsSettings.getElasticsearch() == null) {
                 fsSettings.setElasticsearch(Elasticsearch.DEFAULT());
             }
