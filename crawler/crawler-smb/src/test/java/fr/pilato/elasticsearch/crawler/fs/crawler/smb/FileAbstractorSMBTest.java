@@ -17,11 +17,11 @@ public class FileAbstractorSMBTest extends AbstractFSCrawlerTestCase {
     @Test
     @Ignore
     public void testConnectToWindows() throws Exception {
-        String path = "test";
-        String host = "10.211.55.7";
+        String[] paths = {"","folder","文件夹","folder/文件夹","文件夹/folder"};
+        String host = "192.168.31.45";
         String user = "lzwcyd";
         String pass = "123456";
-        String url = "//Desktop/model";
+        String url = "//Desktop/win10_share_test";
         FsSettings fsSettings = FsSettings.builder("foo")
                 .setServer(
                         Server.builder()
@@ -35,12 +35,14 @@ public class FileAbstractorSMBTest extends AbstractFSCrawlerTestCase {
                 .build();
         FileAbstractorSMB smb = new FileAbstractorSMB(fsSettings);
         smb.open();
-        boolean exists = smb.exists(path);
-        assertThat(exists, is(true));
-        Collection<FileAbstractModel> files = smb.getFiles(path);
-        logger.debug("Found {} files", files.size());
-        for (FileAbstractModel file : files) {
-            logger.debug(" - {}", file);
+        for (String path : paths) {
+            boolean exists = smb.exists(path);
+            assertThat(exists, is(true));
+            Collection<FileAbstractModel> files = smb.getFiles(path);
+            logger.debug("Found {} files", files.size());
+            for (FileAbstractModel file : files) {
+                logger.debug(" - {}", file);
+            }
         }
         smb.close();
     }
