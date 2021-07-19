@@ -80,7 +80,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     public InputStream getInputStream(FileAbstractModel file) throws Exception {
         if (file.isFile()) {
             String fullPath = file.getFullpath();
-            fullPath = correctionPath(fullPath);
+            fullPath = getRelativePath(fullPath);
             return share.openFile(fullPath, EnumSet.of(AccessMask.GENERIC_READ),
                     null,
                     SMB2ShareAccess.ALL,
@@ -94,10 +94,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     @Override
     public Collection<FileAbstractModel> getFiles(String dir) throws Exception {
 
-        //修正路径
-        dir = correctionPath(dir);
-
-
+        dir = getRelativePath(dir);
         logger.debug("Listing smb files from {}", dir);
         List<FileIdBothDirectoryInformation> ls;
 
@@ -131,8 +128,8 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
 
     @Override
     public boolean exists(String dir) {
-        dir = correctionPath(dir);
-        return share.fileExists(dir) || share.folderExists(dir);
+        dir = getRelativePath(dir);
+        return  share.folderExists(dir);
     }
 
     @Override
@@ -147,7 +144,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     }
 
 
-    private String correctionPath(String dir) {
+    private String getRelativePath(String dir) {
         if (dir.startsWith("//")) {
             String[] path = dir.split("/");
             dir = dir.substring(3 + path[2].length() + path[3].length());
@@ -172,7 +169,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
         Session session = connection.authenticate(ac);
         String url = fsSettings.getFs().getUrl();
         //   //6E64/model      //6E64/model/test
-        String serverName = url.split("/")[3];
+        String serverName = url.split("/")[url.startsWith("//")?3:0];
         return (DiskShare) session.connectShare(serverName);
 
     }
