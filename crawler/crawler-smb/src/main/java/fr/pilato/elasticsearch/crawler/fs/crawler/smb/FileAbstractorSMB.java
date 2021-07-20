@@ -5,6 +5,7 @@ import com.hierynomus.msdtyp.SecurityInformation;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
+import com.hierynomus.mssmb2.SMBApiException;
 import com.hierynomus.protocol.commons.EnumWithValue;
 import com.hierynomus.security.bc.BCSecurityProvider;
 import com.hierynomus.smbj.SMBClient;
@@ -129,7 +130,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     @Override
     public boolean exists(String dir) {
         dir = getRelativePath(dir);
-        return  share.folderExists(dir);
+        return share.folderExists(dir);
     }
 
     @Override
@@ -156,20 +157,36 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     private DiskShare openSMBConnection(Server server) throws IOException {
         logger.debug("Opening SMB connection to {}@{}", server.getUsername(), server.getHostname());
 
-        SmbConfig smbConfig = SmbConfig.builder()
-                //SMB3.0 use BCSecurityProvider
-                .withSecurityProvider(new BCSecurityProvider())
-                .withTimeout(12, TimeUnit.SECONDS) // Timeout sets Read, Write, and Transact timeouts (default is 60 seconds)
-                .withSoTimeout(18, TimeUnit.SECONDS) // Socket Timeout (default is 0 seconds, blocks forever)
-                .build();
 
-        client = new SMBClient(smbConfig);
+        Session session;
         AuthenticationContext ac = new AuthenticationContext(server.getUsername(), server.getPassword().toCharArray(), server.getHostname());
-        Connection connection = client.connect(server.getHostname());
-        Session session = connection.authenticate(ac);
+        try {
+            logger.debug("Start trying to connect through SMB2");
+            SmbConfig smbConfig = SmbConfig.builder()
+                    .withTimeout(12, TimeUnit.SECONDS) // Timeout sets Read, Write, and Transact timeouts (default is 60 seconds)
+                    .withSoTimeout(18, TimeUnit.SECONDS) // Socket Timeout (default is 0 seconds, blocks forever)
+                    .build();
+
+            client = new SMBClient(smbConfig);
+            Connection connection = client.connect(server.getHostname());
+            session = connection.authenticate(ac);
+        } catch (UnsupportedOperationException |SMBApiException e) {
+            logger.debug("Start trying to connect through SMB3");
+            //close client
+            client.close();
+            SmbConfig smbConfig = SmbConfig.builder()
+                    //SMB3.0 use BCSecurityProvider
+                    .withSecurityProvider(new BCSecurityProvider())
+                    .withTimeout(12, TimeUnit.SECONDS) // Timeout sets Read, Write, and Transact timeouts (default is 60 seconds)
+                    .withSoTimeout(18, TimeUnit.SECONDS) // Socket Timeout (default is 0 seconds, blocks forever)
+                    .build();
+            client = new SMBClient(smbConfig);
+            Connection connection = client.connect(server.getHostname());
+            session = connection.authenticate(ac);
+        }
         String url = fsSettings.getFs().getUrl();
         //   //6E64/model      //6E64/model/test
-        String serverName = url.split("/")[url.startsWith("//")?3:0];
+        String serverName = url.split("/")[url.startsWith("//") ? 3 : 0];
         return (DiskShare) session.connectShare(serverName);
 
     }
