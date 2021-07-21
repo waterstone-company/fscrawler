@@ -565,6 +565,11 @@
             </dependency>
             <dependency>
                 <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <artifactId>fscrawler-crawler-smb</artifactId>
+                <version>2.7-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.pilato.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-tika</artifactId>
                 <version>2.7-SNAPSHOT</version>
             </dependency>

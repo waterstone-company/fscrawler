@@ -18,6 +18,7 @@
         <module>crawler-fs</module>
         <module>crawler-ftp</module>
         <module>crawler-ssh</module>
+        <module>crawler-smb</module>
     </modules>
 
     <build>

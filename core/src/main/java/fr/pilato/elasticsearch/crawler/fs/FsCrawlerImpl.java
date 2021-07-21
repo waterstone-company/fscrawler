@@ -21,20 +21,15 @@ package fr.pilato.elasticsearch.crawler.fs;
 
 import fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil;
 import fr.pilato.elasticsearch.crawler.fs.framework.TimeValue;
-import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerDocumentService;
-import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerDocumentServiceElasticsearchImpl;
-import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerDocumentServiceWorkplaceSearchImpl;
-import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerManagementService;
-import fr.pilato.elasticsearch.crawler.fs.service.FsCrawlerManagementServiceElasticsearchImpl;
+import fr.pilato.elasticsearch.crawler.fs.service.*;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsCrawlerValidator;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
 import fr.pilato.elasticsearch.crawler.fs.settings.Server;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author dadoonet (David Pilato)
@@ -123,6 +118,9 @@ public class FsCrawlerImpl implements AutoCloseable {
             if (settings.getServer() == null || Server.PROTOCOL.LOCAL.equals(settings.getServer().getProtocol())) {
                 // Local FS
                 fsParser = new FsParserLocal(settings, config, managementService, documentService, loop);
+            } else if (Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())) {
+                // Remote SMB FS
+                fsParser = new FsParserSmb(settings, config, managementService, documentService, loop);
             } else if (Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol())) {
                 // Remote SSH FS
                 fsParser = new FsParserSsh(settings, config, managementService, documentService, loop);
@@ -149,7 +147,7 @@ public class FsCrawlerImpl implements AutoCloseable {
         if (fsParser != null) {
             fsParser.close();
 
-            synchronized(fsParser.getSemaphore()) {
+            synchronized (fsParser.getSemaphore()) {
                 fsParser.getSemaphore().notifyAll();
             }
         }
