@@ -217,10 +217,10 @@ public class FsCrawlerCli {
                 if (fsSettings.getServer().getProtocol().equals(PROTOCOL.FTP) && StringUtils.isEmpty(fsSettings.getServer().getUsername())) {
                     fsSettings.getServer().setUsername("anonymous");
                 }
-            }
 
-            if (fsSettings.getServer().getProtocol().equals(PROTOCOL.SMB) && StringUtils.isEmpty(fsSettings.getServer().getUsername())) {
-                fsSettings.getServer().setUsername("Guest");
+                if (fsSettings.getServer().getProtocol().equals(PROTOCOL.SMB) && StringUtils.isEmpty(fsSettings.getServer().getUsername())) {
+                    fsSettings.getServer().setUsername("Guest");
+                }
             }
 
             if (fsSettings.getElasticsearch() == null) {
