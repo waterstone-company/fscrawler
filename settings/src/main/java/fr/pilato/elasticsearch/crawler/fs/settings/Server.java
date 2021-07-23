@@ -21,13 +21,13 @@ package fr.pilato.elasticsearch.crawler.fs.settings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Objects;
 
 public class Server {
 
     public static final class PROTOCOL {
         public static final String LOCAL = "local";
+        public static final String SMB = "smb";
         public static final String SSH = "ssh";
         public static final String FTP = "ftp";
         public static final int SSH_PORT = 22;
@@ -141,6 +141,7 @@ public class Server {
             this.protocol = protocol;
             return this;
         }
+
 
         public Builder setPemPath(String pemPath) {
             this.pemPath = pemPath;

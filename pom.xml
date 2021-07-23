@@ -37,7 +37,7 @@
 
     <!--suppress CheckTagEmptyBody -->
     <properties>
-        <elasticsearch7.version>7.13.3</elasticsearch7.version>
+        <elasticsearch7.version>7.13.4</elasticsearch7.version>
         <elasticsearch6.version>6.8.17</elasticsearch6.version>
         <elasticsearch.version>${elasticsearch7.version}</elasticsearch.version>
 
@@ -561,6 +561,11 @@
             <dependency>
                 <groupId>fr.pilato.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-crawler-ssh</artifactId>
+                <version>2.7-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <artifactId>fscrawler-crawler-smb</artifactId>
                 <version>2.7-SNAPSHOT</version>
             </dependency>
             <dependency>
