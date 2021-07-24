@@ -18,6 +18,7 @@ import com.hierynomus.smbj.share.DiskEntry;
 import com.hierynomus.smbj.share.DiskShare;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractModel;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractor;
+import fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
 import fr.pilato.elasticsearch.crawler.fs.settings.Server;
 import java.io.ByteArrayInputStream;
@@ -57,7 +58,8 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
 
 
         //此处这样取文件/文件夹名的原因为：file.getFileInformation().getNameInformation() 取到的值永远为null
-        String fileName = file.getUncPath().substring(file.getUncPath().lastIndexOf("\\") + 1);
+        String fileName = FsCrawlerUtil.getFileName(file.getUncPath());
+        String extension = FilenameUtils.getExtension(fileName);
 
         return new FileAbstractModel(
                 fileName,
@@ -68,7 +70,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
                 null,
                 // We are using here the local TimeZone as a reference. If the remote system is under another TZ, this might cause issues
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(file.getFileInformation().getBasicInformation().getCreationTime().toEpochMillis()), ZoneId.systemDefault()),
-                FilenameUtils.getExtension(file.getFileInformation().getNameInformation()),
+                extension,
                 path,
                 path.concat("/").concat(fileName),
                 file.getFileInformation().getStandardInformation().getAllocationSize(),
@@ -170,7 +172,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
             client = new SMBClient(smbConfig);
             Connection connection = client.connect(server.getHostname());
             session = connection.authenticate(ac);
-        } catch (UnsupportedOperationException |SMBApiException e) {
+        } catch (UnsupportedOperationException | SMBApiException e) {
             logger.debug("Start trying to connect through SMB3");
             //close client
             client.close();
