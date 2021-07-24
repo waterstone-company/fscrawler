@@ -20,48 +20,22 @@ package fr.pilato.elasticsearch.crawler.fs.framework;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.*;
+import java.nio.file.attribute.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.CopyOption;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributeView;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileOwnerAttributeView;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.regex.Pattern;
 
 public class FsCrawlerUtil {
     public static final String INDEX_SUFFIX_FOLDER = "_folder";
@@ -473,6 +447,16 @@ public class FsCrawlerUtil {
             logger.warn("Failed to determine 'permissions' of {}: {}", file, e.getMessage());
             return -1;
         }
+    }
+
+    /**
+     * This method is used to get the file/folder name from the path, only for SMB Crawler
+     * because file.getFileInformation().getNameInformation() always equal null
+     * @param uncPath file uncPath
+     * @return fileName
+     */
+    public static String getFileName(String uncPath) {
+        return uncPath.substring(uncPath.lastIndexOf("\\") + 1);
     }
 
     private static int toOctalPermission(boolean read, boolean write, boolean execute) {
