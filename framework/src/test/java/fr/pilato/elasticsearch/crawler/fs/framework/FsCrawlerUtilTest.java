@@ -19,6 +19,7 @@
 
 package fr.pilato.elasticsearch.crawler.fs.framework;
 
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.*;
 import fr.pilato.elasticsearch.crawler.fs.test.framework.AbstractFSCrawlerTestCase;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -48,16 +49,6 @@ import org.mockftpserver.fake.filesystem.Permissions;
 import org.mockftpserver.fake.filesystem.UnixFakeFileSystem;
 
 import static com.carrotsearch.randomizedtesting.RandomizedTest.randomIntBetween;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.computeRealPathName;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.computeVirtualPathName;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMajorVersion;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMinorVersion;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFileExtension;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFilePermissions;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getGroupName;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getOwnerName;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isFileSizeUnderLimit;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.localDateTimeToDate;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -138,6 +129,17 @@ public class FsCrawlerUtilTest extends AbstractFSCrawlerTestCase {
 
         ftp.disconnect();
         fakeFtpServer.stop();
+    }
+
+    @Test
+    public void testGetFileName(){
+        assertThat(getFileName("\\test\\test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test.txt"),is("test.txt"));
+        assertThat(getFileName("test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test\\test\\test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test\\test"),is("test"));
+        assertThat(getFileName("\\test"),is("test"));
+        assertThat(getFileName("test"),is("test"));
     }
 
     @Test
