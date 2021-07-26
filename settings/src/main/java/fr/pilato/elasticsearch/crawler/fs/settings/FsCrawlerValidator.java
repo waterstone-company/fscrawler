@@ -20,20 +20,21 @@
 package fr.pilato.elasticsearch.crawler.fs.settings;
 
 import fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.INDEX_SUFFIX_FOLDER;
 import fr.pilato.elasticsearch.crawler.fs.framework.OsValidator;
+import org.apache.logging.log4j.Logger;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import org.apache.logging.log4j.Logger;
+
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.INDEX_SUFFIX_FOLDER;
 
 public class FsCrawlerValidator {
 
     /**
      * Check if settings are valid. Note that settings can be updated by this method (fallback to defaults if not set)
-     *
-     * @param logger   Needed to print warn/errors or info
-     * @param settings Settings we want to check
-     * @param rest     true If Rest server should be started, so we check Rest settings
+     * @param logger    Needed to print warn/errors or info
+     * @param settings  Settings we want to check
+     * @param rest      true If Rest server should be started, so we check Rest settings
      * @return true if we found fatal errors and should prevent from starting
      */
     public static boolean validateSettings(Logger logger, FsSettings settings, boolean rest) {
@@ -61,10 +62,10 @@ public class FsCrawlerValidator {
         // Checking protocol
         if (settings.getServer() != null) {
             if (!Server.PROTOCOL.LOCAL.equals(settings.getServer().getProtocol()) &&
-                    !Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol()) && !Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())) {
+                    !Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol()) && !Server.PROTOCOL.FTP.equals(settings.getServer().getProtocol()) && !Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())) {
                 // Non supported protocol
                 logger.error(settings.getServer().getProtocol() + " is not supported yet. Please use " +
-                        Server.PROTOCOL.LOCAL + " or " + Server.PROTOCOL.SSH + " or " + Server.PROTOCOL.SMB  + ". Disabling crawler");
+                        Server.PROTOCOL.LOCAL + " or " + Server.PROTOCOL.SSH + " or " + Server.PROTOCOL.FTP + " or " + Server.PROTOCOL.SMB  + ". Disabling crawler");
                 return true;
             }
 
