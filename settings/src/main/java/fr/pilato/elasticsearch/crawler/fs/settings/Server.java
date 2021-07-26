@@ -21,6 +21,7 @@ package fr.pilato.elasticsearch.crawler.fs.settings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class Server {
@@ -141,7 +142,6 @@ public class Server {
             this.protocol = protocol;
             return this;
         }
-
 
         public Builder setPemPath(String pemPath) {
             this.pemPath = pemPath;
