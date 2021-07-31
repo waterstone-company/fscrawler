@@ -123,6 +123,9 @@ public class FsCrawlerImpl implements AutoCloseable {
             if (settings.getServer() == null || Server.PROTOCOL.LOCAL.equals(settings.getServer().getProtocol())) {
                 // Local FS
                 fsParser = new FsParserLocal(settings, config, managementService, documentService, loop);
+            } else if (Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())) {
+                // Remote SMB FS
+                fsParser = new FsParserSmb(settings, config, managementService, documentService, loop);
             } else if (Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol())) {
                 // Remote SSH FS
                 fsParser = new FsParserSsh(settings, config, managementService, documentService, loop);
@@ -149,7 +152,7 @@ public class FsCrawlerImpl implements AutoCloseable {
         if (fsParser != null) {
             fsParser.close();
 
-            synchronized(fsParser.getSemaphore()) {
+            synchronized (fsParser.getSemaphore()) {
                 fsParser.getSemaphore().notifyAll();
             }
         }

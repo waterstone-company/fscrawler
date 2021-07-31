@@ -442,6 +442,16 @@ public class FsCrawlerUtil {
         }
     }
 
+    /**
+     * This method is used to get the file/folder name from the path, only for SMB Crawler
+     * because file.getFileInformation().getNameInformation() always equal null
+     * @param uncPath file uncPath
+     * @return fileName
+     */
+    public static String getFileName(String uncPath) {
+        return uncPath.substring(uncPath.lastIndexOf("\\") + 1);
+    }
+
     public static int toOctalPermission(boolean read, boolean write, boolean execute) {
         return (read ? 4 : 0) + (write ? 2 : 0) + (execute ? 1 : 0);
     }

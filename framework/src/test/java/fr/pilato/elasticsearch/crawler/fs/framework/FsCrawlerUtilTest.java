@@ -40,6 +40,7 @@ import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.compute
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMajorVersion;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMinorVersion;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFileExtension;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFileName;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFilePermissions;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getGroupName;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getOwnerName;
@@ -82,6 +83,17 @@ public class FsCrawlerUtilTest extends AbstractFSCrawlerTestCase {
         assumeFalse("This test can not run on Windows.", OsValidator.WINDOWS);
         int permissions = getFilePermissions(file);
         assertThat(permissions, is(700));
+    }
+
+    @Test
+    public void testGetFileName(){
+        assertThat(getFileName("\\test\\test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test.txt"),is("test.txt"));
+        assertThat(getFileName("test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test\\test\\test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test\\test"),is("test"));
+        assertThat(getFileName("\\test"),is("test"));
+        assertThat(getFileName("test"),is("test"));
     }
 
     @Test
