@@ -27,7 +27,11 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
@@ -80,15 +84,21 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     }
 
     @Override
-    public InputStream getInputStream(FileAbstractModel file) {
+    public InputStream getInputStream(FileAbstractModel file) throws IOException {
         if (file.isFile()) {
             String fullPath = file.getFullpath();
             fullPath = FsCrawlerUtil.getRelativePath(fullPath);
-            return share.openFile(fullPath, EnumSet.of(AccessMask.GENERIC_READ),
-                    null,
-                    SMB2ShareAccess.ALL,
-                    SMB2CreateDisposition.FILE_OPEN,
-                    null).getInputStream();
+
+            try {
+                return share.openFile(fullPath, EnumSet.of(AccessMask.GENERIC_READ),
+                        null,
+                        SMB2ShareAccess.ALL,
+                        SMB2CreateDisposition.FILE_OPEN,
+                        null).getInputStream();
+            } catch (SMBApiException e) {
+                logger.error("SMB client can not retrieve stream for {} , e: {}", fullPath , e);
+                throw new IOException(String.format("SMB client can not retrieve stream for [%s] ",fullPath));
+            }
         } else {
             return new ByteArrayInputStream(file.getName().getBytes());
         }
