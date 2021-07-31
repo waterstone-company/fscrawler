@@ -117,7 +117,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
         // We ignore here all files like . and ..
         String finalDir = dir;
         result.addAll(ls.stream().filter(file -> !".".equals(file.getFileName()) &&
-                !"..".equals(file.getFileName()))
+                        !"..".equals(file.getFileName()))
                 .map(file -> toFileAbstractModel(finalDir, share.open(finalDir + "/" + file.getFileName(), EnumSet.of(AccessMask.GENERIC_READ),
                         null,
                         SMB2ShareAccess.ALL,
@@ -187,8 +187,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
             session = connection.authenticate(ac);
         }
         String url = fsSettings.getFs().getUrl();
-        //   //6E64/model      //6E64/model/test
-        String serverName = url.split("/")[url.startsWith("//") ? 3 : 0];
+        String serverName = FsCrawlerUtil.getServerName(url);
         return (DiskShare) session.connectShare(serverName);
 
     }

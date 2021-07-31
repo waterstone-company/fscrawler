@@ -688,4 +688,13 @@ public class FsCrawlerUtil {
     public static String extractMinorVersion(String version) {
         return version.split("\\.")[1];
     }
+
+    /**
+     * obtain server name through server url（SMB）
+     * @param url serverUrl
+     * @return serverName
+     */
+    public static String getServerName(String url) {
+        return url.split("/")[url.startsWith("//") ? 3 : url.startsWith("/") ? 1 : 0];
+    }
 }
