@@ -83,6 +83,15 @@ public class FsCrawlerValidator {
                 logger.error("When using SMB, you need to set a username and probably a password. Disabling crawler");
                 return true;
             }
+
+            if (Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())){
+                String url = settings.getFs().getUrl();
+                String[] path = url.split("/");
+                if (!url.startsWith("//") || path.length < 4 || url.endsWith("/")){
+                    logger.error("When using SMB, The url format should be '//DesktopNameOrIp/shareName' and cannot end with'/' . Disabling crawler");
+                    return true;
+                }
+            }
         }
 
         // Checking Checksum Algorithm
