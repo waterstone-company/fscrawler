@@ -697,4 +697,20 @@ public class FsCrawlerUtil {
     public static String getServerName(String url) {
         return url.split("/")[url.startsWith("//") ? 3 : url.startsWith("/") ? 1 : 0];
     }
+
+
+    /**
+     * get relative path (SMB)  //desktopName/shareName //desktopName/shareName/test  /shareName  /shareName/test
+     * @param dir dir
+     * @return relative path
+     */
+    public static String getRelativePath(String dir) {
+        String[] path = dir.split("/");
+        if (dir.startsWith("//")) {
+            dir = dir.substring(3 + path[2].length() + path[3].length());
+        } else if (dir.startsWith("/") && path.length >= 2) {
+            dir = dir.substring(1 + path[1].length());
+        }
+        return dir;
+    }
 }

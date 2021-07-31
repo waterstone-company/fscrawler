@@ -80,10 +80,10 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     }
 
     @Override
-    public InputStream getInputStream(FileAbstractModel file) throws Exception {
+    public InputStream getInputStream(FileAbstractModel file) {
         if (file.isFile()) {
             String fullPath = file.getFullpath();
-            fullPath = getRelativePath(fullPath);
+            fullPath = FsCrawlerUtil.getRelativePath(fullPath);
             return share.openFile(fullPath, EnumSet.of(AccessMask.GENERIC_READ),
                     null,
                     SMB2ShareAccess.ALL,
@@ -95,13 +95,13 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     }
 
     @Override
-    public Collection<FileAbstractModel> getFiles(String dir) throws Exception {
+    public Collection<FileAbstractModel> getFiles(String dir) {
 
-        dir = getRelativePath(dir);
-        logger.debug("Listing smb files from {}", dir);
+        String relativeDir = FsCrawlerUtil.getRelativePath(dir);
+        logger.debug("Listing smb files from {}", relativeDir);
         List<FileIdBothDirectoryInformation> ls;
 
-        Directory directory = share.openDirectory(dir, EnumSet.of(AccessMask.GENERIC_READ),
+        Directory directory = share.openDirectory(relativeDir, EnumSet.of(AccessMask.GENERIC_READ),
                 null,
                 SMB2ShareAccess.ALL,
                 SMB2CreateDisposition.FILE_OPEN,
@@ -115,10 +115,9 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
         Collection<FileAbstractModel> result = new ArrayList<>(ls.size());
         // Iterate other files
         // We ignore here all files like . and ..
-        String finalDir = dir;
         result.addAll(ls.stream().filter(file -> !".".equals(file.getFileName()) &&
                         !"..".equals(file.getFileName()))
-                .map(file -> toFileAbstractModel(finalDir, share.open(finalDir + "/" + file.getFileName(), EnumSet.of(AccessMask.GENERIC_READ),
+                .map(file -> toFileAbstractModel(dir, share.open(relativeDir + "/" + file.getFileName(), EnumSet.of(AccessMask.GENERIC_READ),
                         null,
                         SMB2ShareAccess.ALL,
                         SMB2CreateDisposition.FILE_OPEN,
@@ -131,7 +130,7 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
 
     @Override
     public boolean exists(String dir) {
-        dir = getRelativePath(dir);
+        dir = FsCrawlerUtil.getRelativePath(dir);
         return share.folderExists(dir);
     }
 
@@ -144,15 +143,6 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     public void close() throws Exception {
         share.close();
         client.close();
-    }
-
-
-    private String getRelativePath(String dir) {
-        if (dir.startsWith("//")) {
-            String[] path = dir.split("/");
-            dir = dir.substring(3 + path[2].length() + path[3].length());
-        }
-        return dir;
     }
 
 

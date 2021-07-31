@@ -58,6 +58,7 @@ import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFile
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getGroupName;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getOwnerName;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getServerName;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getRelativePath;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isFileSizeUnderLimit;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.localDateTimeToDate;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -297,6 +298,16 @@ public class FsCrawlerUtilTest extends AbstractFSCrawlerTestCase {
     @Test
     public void testGetServerName(){
         assertThat(getServerName("//desttop-123/test"), is("test"));
+    }
+
+    @Test
+    public void testGetRelativePath(){
+        assertThat(getRelativePath("//desktopName/shareName"), is(""));
+        assertThat(getRelativePath("//desktopName/shareName/test"), is("/test"));
+        assertThat(getRelativePath("//desktopName/shareName/test.txt"), is("/test.txt"));
+        assertThat(getRelativePath("//desktopName/shareName/folder/test.txt"), is("/folder/test.txt"));
+        assertThat(getRelativePath("/shareName"), is(""));
+        assertThat(getRelativePath("/shareName/test"), is("/test"));
     }
 
 }
