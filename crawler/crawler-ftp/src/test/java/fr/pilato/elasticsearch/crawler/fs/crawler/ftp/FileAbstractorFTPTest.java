@@ -101,16 +101,16 @@ public class FileAbstractorFTPTest extends AbstractFSCrawlerTestCase {
                 assertThat(subDirFiles.size(), is(2));
                 logger.debug("Found {} files in sub dir", subDirFiles.size());
                 for (FileAbstractModel subDirFile : subDirFiles) {
-                    try (InputStream inputStream = ftp.getInputStream(subDirFile)) {
-                        String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                        logger.debug("[{}] - {}: {}", file.getName(), subDirFile.getName(), content);
-                    }
+                    InputStream inputStream = ftp.getInputStream(subDirFile);
+                    String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                    logger.debug("[{}] - {}: {}", file.getName(), subDirFile.getName(), content);
+                    ftp.closeInputStream(inputStream);
                 }
             } else {
-                try (InputStream inputStream = ftp.getInputStream(file)) {
-                    String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                    logger.debug(" - {}: {}", file.getName(), content);
-                }
+                InputStream inputStream = ftp.getInputStream(file);
+                String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                logger.debug(" - {}: {}", file.getName(), content);
+                ftp.closeInputStream(inputStream);
             }
         }
 
@@ -144,17 +144,61 @@ public class FileAbstractorFTPTest extends AbstractFSCrawlerTestCase {
                 logger.debug("Found {} files in sub dir", subDirFiles.size());
                 for (FileAbstractModel subDirFile : subDirFiles) {
                     if (subDirFile.isFile()) {
-                        try (InputStream inputStream = ftp.getInputStream(subDirFile)) {
-                            String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                            logger.debug("[{}] - {}: {}", file.getName(), subDirFile.getName(), content);
-                        }
+                        InputStream inputStream = ftp.getInputStream(subDirFile);
+                        String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                        logger.debug("[{}] - {}: {}", file.getName(), subDirFile.getName(), content);
+                        ftp.closeInputStream(inputStream);
                     }
                 }
             } else {
-                try (InputStream inputStream = ftp.getInputStream(file)) {
-                    String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                    logger.debug(" - {}: {}", file.getName(), content);
+                InputStream inputStream = ftp.getInputStream(file);
+                String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                logger.debug(" - {}: {}", file.getName(), content);
+                ftp.closeInputStream(inputStream);
+            }
+        }
+
+        ftp.close();
+    }
+
+    @Test
+    public void testFTPFilePermissions() throws IOException {
+        int port = fakeFtpServer.getServerControlPort();
+        FsSettings fsSettings = FsSettings.builder("fake")
+            .setServer(
+                Server.builder()
+                    .setHostname("localhost")
+                    .setUsername(user)
+                    .setPassword(pass)
+                    .setPort(port)
+                    .build()
+            )
+            .build();
+
+        FileAbstractorFTP ftp = new FileAbstractorFTP(fsSettings);
+        ftp.open();
+
+        Collection<FileAbstractModel> files = ftp.getFiles(permissionDir);
+        assertThat(files.size(), is(2));
+        List<String> filenames = files.stream().map(FileAbstractModel::getName).collect(Collectors.toList());
+        assertThat(filenames.contains("all.txt"), is(true));
+        assertThat(filenames.contains("none.txt"), is(true));
+        for (FileAbstractModel file : files) {
+            if (file.getName().equals("all.txt")) {
+                assertThat(file.getPermissions(), is(777));
+                InputStream inputStream = ftp.getInputStream(file);
+                String content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                logger.debug(" - {}: {}", file.getName(), content);
+                ftp.closeInputStream(inputStream);
+            } else if (file.getName().equals("none.txt")) {
+                assertThat(file.getPermissions(), is(0));
+                boolean errorOccurred = false;
+                try (InputStream ignored = ftp.getInputStream(file)) {
+                } catch (IOException e) {
+                    errorOccurred = true;
+                    logger.error(e.getMessage());
                 }
+                assertThat(errorOccurred, is(true));
             }
         }
 
