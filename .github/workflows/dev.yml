@@ -64,7 +64,7 @@ jobs:
           restore-keys: |
             fscrawler-docker-cache-
       - name: Deploy with Maven
-        run: mvn install -Dossindex.fail=false -DskipTests && mvn -f distribution/es7/pom.xml docker:build && mvn -f distribution/es6/pom.xml docker:build && mvn -f distribution/pom.xml docker:push
+        run: mvn package && mvn -f distribution/pom.xml docker:push
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.OSSRH_TOKEN }}
