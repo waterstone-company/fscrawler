@@ -257,7 +257,7 @@ public abstract class FsParserAbstract extends FsParser {
                     logger.trace("FileAbstractModel = {}", child);
                     String filename = child.getName();
 
-                    String virtualFileName = computeVirtualPathName(stats.getRootPath(), FsCrawlerUtil.computeRealPathName(filepath, filename));
+                    String virtualFileName = computeVirtualPathName(stats.getRootPath(), computeRealPathName(filepath, filename));
 
                     // https://github.com/dadoonet/fscrawler/issues/1 : Filter documents
                     boolean isIndexable = isIndexable(child.isDirectory(), virtualFileName, fsSettings.getFs().getIncludes(), fsSettings.getFs().getExcludes());
@@ -277,9 +277,9 @@ public abstract class FsParserAbstract extends FsParser {
                                         }
                                         indexFile(child, stats, filepath, inputStream, child.getSize());
                                         stats.addFile();
-                                    } catch (java.io.FileNotFoundException e) {
+                                    } catch (Exception e) {
                                         if (fsSettings.getFs().isContinueOnError()) {
-                                            logger.warn("Unable to open Input Stream for {}, skipping...: {}", filename, e.getMessage());
+                                            logger.warn("Unable to index {}, skipping...: {}", filename, e.getMessage());
                                         } else {
                                             throw e;
                                         }
@@ -326,7 +326,7 @@ public abstract class FsParserAbstract extends FsParser {
             for (String esfile : esFiles) {
                 logger.trace("Checking file [{}]", esfile);
 
-                String virtualFileName = computeVirtualPathName(stats.getRootPath(), FsCrawlerUtil.computeRealPathName(filepath, esfile));
+                String virtualFileName = computeVirtualPathName(stats.getRootPath(), computeRealPathName(filepath, esfile));
                 if (isIndexable(false, virtualFileName, fsSettings.getFs().getIncludes(), fsSettings.getFs().getExcludes())
                         && !fsFiles.contains(esfile)) {
                     logger.trace("Removing file [{}] in elasticsearch/workplace", esfile);
@@ -341,7 +341,7 @@ public abstract class FsParserAbstract extends FsParser {
 
                 // for the delete folder
                 for (String esfolder : esFolders) {
-                    String virtualFileName = computeVirtualPathName(stats.getRootPath(), FsCrawlerUtil.computeRealPathName(filepath, esfolder));
+                    String virtualFileName = computeVirtualPathName(stats.getRootPath(), computeRealPathName(filepath, esfolder));
                     if (isIndexable(true, virtualFileName, fsSettings.getFs().getIncludes(), fsSettings.getFs().getExcludes())) {
                         logger.trace("Checking directory [{}]", esfolder);
                         if (!fsFolders.contains(esfolder)) {
@@ -384,7 +384,7 @@ public abstract class FsParserAbstract extends FsParser {
         final long size = fileAbstractModel.getSize();
 
         logger.debug("fetching content from [{}],[{}]", dirname, filename);
-        String fullFilename = FsCrawlerUtil.computeRealPathName(dirname, filename);
+        String fullFilename = computeRealPathName(dirname, filename);
 
         // Create the Doc object (only needed when we have add_as_inner_object: true (default) or when we don't index json or xml)
         String id = generateIdFromFilename(filename, dirname);
@@ -494,11 +494,11 @@ public abstract class FsParserAbstract extends FsParser {
         }
     }
 
-    private String generateIdFromFilename(String _filename, String _filepath) throws NoSuchAlgorithmException {
-        String filepathForId = _filepath.replace("\\", "/");
-        String filename = _filename.replace("\\", "").replace("/", "");
-        String fullFilename = filepathForId.endsWith("/") ? filepathForId.concat(filename) : filepathForId.concat("/").concat(filename);
-        return fsSettings.getFs().isFilenameAsId() ? filename : SignTool.sign(fullFilename);
+    private String generateIdFromFilename(String filename, String filepath) throws NoSuchAlgorithmException {
+        String filepathForId = filepath.replace("\\", "/");
+        String filenameForId = filename.replace("\\", "").replace("/", "");
+        String idSource = filepathForId.endsWith("/") ? filepathForId.concat(filenameForId) : filepathForId.concat("/").concat(filenameForId);
+        return fsSettings.getFs().isFilenameAsId() ? filename : SignTool.sign(idSource);
     }
 
     private String read(InputStream input) throws IOException {
@@ -523,7 +523,7 @@ public abstract class FsParserAbstract extends FsParser {
 
     /**
      * Index a directory
-     * @param path complete path like "/", "/path/to/subdir", "/C:/dir", "//SOMEONE/dir"
+     * @param path complete path like "/", "/path/to/subdir", "C:\\dir", "C:/dir", "/C:/dir", "//SOMEONE/dir"
      */
     private void indexDirectory(String path) throws Exception {
         String name = path.substring(path.lastIndexOf(pathSeparator) + 1);
