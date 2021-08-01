@@ -105,6 +105,11 @@ public class FileAbstractorSMB extends FileAbstractor<DiskEntry> {
     }
 
     @Override
+    public void closeInputStream(InputStream inputStream) throws IOException {
+        inputStream.close();
+    }
+
+    @Override
     public Collection<FileAbstractModel> getFiles(String dir) {
 
         String relativeDir = FsCrawlerUtil.getRelativePath(dir);
