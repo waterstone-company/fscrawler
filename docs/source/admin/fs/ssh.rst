@@ -5,7 +5,7 @@ SSH settings
 
 You can index files remotely using SSH.
 
-Here is a list of SSH settings (under ``server.`` prefix)`:
+Here is a list of SSH settings (under ``server.`` prefix):
 
 +-----------------------+-----------------------+-----------------------+
 | Name                  | Default value         | Documentation         |
@@ -87,6 +87,23 @@ To specify the drive, you need to use the following format:
    name: "test"
    fs:
      url: "/D:/path/to/data/dir/on/server"
+   server:
+     hostname: "mynode.mydomain.com"
+     port: 22
+     username: "username"
+     password: "password"
+     protocol: "ssh"
+
+Windows shared folder
+~~~~~~~~~~~~~~~~~~~~~
+
+When using Windows shared folder, you need to use the following format:
+
+.. code:: yaml
+
+   name: "test"
+   fs:
+     url: "//DESKTOP-NAME/path/to/data/dir/on/server"
    server:
      hostname: "mynode.mydomain.com"
      port: 22

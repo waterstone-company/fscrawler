@@ -40,5 +40,7 @@ You will find more information about settings in the following sections:
 -  :ref:`cli-options`
 -  :ref:`local-fs-settings`
 -  :ref:`ssh-settings`
+-  :ref:`ftp-settings`
+-  :ref:`smb-settings`
 -  :ref:`elasticsearch-settings`
 

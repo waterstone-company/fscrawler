@@ -71,7 +71,15 @@
         </dependency>
         <dependency>
             <groupId>fr.pilato.elasticsearch.crawler</groupId>
+            <artifactId>fscrawler-crawler-ftp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.pilato.elasticsearch.crawler</groupId>
             <artifactId>fscrawler-crawler-ssh</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.pilato.elasticsearch.crawler</groupId>
+            <artifactId>fscrawler-crawler-smb</artifactId>
         </dependency>
 
         <!-- Our Elasticsearch Client -->

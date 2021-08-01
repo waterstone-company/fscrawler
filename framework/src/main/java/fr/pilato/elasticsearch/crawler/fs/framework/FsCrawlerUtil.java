@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
@@ -282,11 +281,34 @@ public class FsCrawlerUtil {
         return true;
     }
 
+    public static String getPathSeparator(String path) {
+        if (path.contains("/") && !path.contains("\\")) {
+            return "/";
+        }
+
+        if (!path.contains("/") && (path.contains("\\") || path.contains(":"))) {
+            return "\\";
+        }
+
+        return File.separator;
+    }
+
+    public static String computeRealPathName(String _dirname, String filename) {
+        // new File(dirname, filename).toString() is not suitable for server
+        String separator = getPathSeparator(_dirname);
+        String dirname = _dirname.endsWith(separator) ? _dirname : _dirname.concat(separator);
+        return dirname + filename;
+    }
+
     public static String computeVirtualPathName(String rootPath, String realPath) {
-        String result = "/";
-        if (realPath != null && realPath.length() > rootPath.length()) {
-            result = realPath.substring(rootPath.length())
-                    .replace("\\", "/");
+        String result = getPathSeparator(rootPath);
+        if (realPath.startsWith(rootPath) && realPath.length() > rootPath.length()) {
+            if (rootPath.equals("/")) {
+                // "/" is very common for FTP
+                result = realPath;
+            } else {
+                result = realPath.substring(rootPath.length());
+            }
         }
 
         logger.debug("computeVirtualPathName({}, {}) = {}", rootPath, realPath, result);
@@ -415,12 +437,22 @@ public class FsCrawlerUtil {
             return user * 100 + group * 10 + others;
         }
         catch(Exception e) {
-            logger.warn("Failed to determine 'owner' of {}: {}", file, e.getMessage());
+            logger.warn("Failed to determine 'permissions' of {}: {}", file, e.getMessage());
             return -1;
         }
     }
 
-    private static int toOctalPermission(boolean read, boolean write, boolean execute) {
+    /**
+     * This method is used to get the file/folder name from the path, only for SMB Crawler
+     * because file.getFileInformation().getNameInformation() always equal null
+     * @param uncPath file uncPath
+     * @return fileName
+     */
+    public static String getFileName(String uncPath) {
+        return uncPath.substring(uncPath.lastIndexOf("\\") + 1);
+    }
+
+    public static int toOctalPermission(boolean read, boolean write, boolean execute) {
         return (read ? 4 : 0) + (write ? 2 : 0) + (execute ? 1 : 0);
     }
 
@@ -576,7 +608,9 @@ public class FsCrawlerUtil {
             if (Files.notExists(root)) {
                 Files.createDirectory(root);
             }
-        } catch (IOException ignored) { }
+        } catch (IOException ignored) {
+            logger.error("Failed to create config dir");
+        }
     }
 
     /**
@@ -628,5 +662,30 @@ public class FsCrawlerUtil {
 
     public static String extractMinorVersion(String version) {
         return version.split("\\.")[1];
+    }
+
+    /**
+     * obtain server name through server url（SMB）
+     * @param url serverUrl
+     * @return serverName
+     */
+    public static String getServerName(String url) {
+        return url.split("/")[url.startsWith("//") ? 3 : url.startsWith("/") ? 1 : 0];
+    }
+
+
+    /**
+     * get relative path (SMB)  //desktopName/shareName //desktopName/shareName/test  /shareName  /shareName/test
+     * @param dir dir
+     * @return relative path
+     */
+    public static String getRelativePath(String dir) {
+        String[] path = dir.split("/");
+        if (dir.startsWith("//")) {
+            dir = dir.substring(3 + path[2].length() + path[3].length());
+        } else if (dir.startsWith("/") && path.length >= 2) {
+            dir = dir.substring(1 + path[1].length());
+        }
+        return dir;
     }
 }

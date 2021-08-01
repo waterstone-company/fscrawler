@@ -48,6 +48,15 @@ public class FileAbstractorFile extends FileAbstractor<File> {
         super(fsSettings);
     }
 
+    public static String separator = File.separator;
+
+    private String resolveSeparator(String path) {
+        if (separator.equals("/")) {
+            return path.replace("\\", "/");
+        }
+        return path.replace("/", "\\");
+    }
+
     @Override
     public FileAbstractModel toFileAbstractModel(String path, File file) {
         return new FileAbstractModel(
@@ -57,8 +66,8 @@ public class FileAbstractorFile extends FileAbstractor<File> {
                 getCreationTime(file),
                 getLastAccessTime(file),
                 getFileExtension(file),
-                path,
-                file.getAbsolutePath(),
+                resolveSeparator(path),
+                resolveSeparator(file.getAbsolutePath()),
                 file.length(),
                 getOwnerName(file),
                 getGroupName(file),
@@ -67,7 +76,7 @@ public class FileAbstractorFile extends FileAbstractor<File> {
 
     @Override
     public InputStream getInputStream(FileAbstractModel file) throws Exception {
-        return new FileInputStream(new File(file.getFullpath()));
+        return new FileInputStream(file.getFullpath());
     }
 
     @Override

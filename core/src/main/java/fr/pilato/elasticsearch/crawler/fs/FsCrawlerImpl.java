@@ -123,9 +123,15 @@ public class FsCrawlerImpl implements AutoCloseable {
             if (settings.getServer() == null || Server.PROTOCOL.LOCAL.equals(settings.getServer().getProtocol())) {
                 // Local FS
                 fsParser = new FsParserLocal(settings, config, managementService, documentService, loop);
+            } else if (Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())) {
+                // Remote SMB FS
+                fsParser = new FsParserSmb(settings, config, managementService, documentService, loop);
             } else if (Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol())) {
                 // Remote SSH FS
                 fsParser = new FsParserSsh(settings, config, managementService, documentService, loop);
+            } else if (Server.PROTOCOL.FTP.equals(settings.getServer().getProtocol())) {
+                // Remote FTP FS
+                fsParser = new FsParserFTP(settings, config, managementService, documentService, loop);
             } else {
                 // Non supported protocol
                 throw new RuntimeException(settings.getServer().getProtocol() + " is not supported yet. Please use " +
@@ -146,7 +152,7 @@ public class FsCrawlerImpl implements AutoCloseable {
         if (fsParser != null) {
             fsParser.close();
 
-            synchronized(fsParser.getSemaphore()) {
+            synchronized (fsParser.getSemaphore()) {
                 fsParser.getSemaphore().notifyAll();
             }
         }

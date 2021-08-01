@@ -28,8 +28,11 @@ public class Server {
 
     public static final class PROTOCOL {
         public static final String LOCAL = "local";
+        public static final String SMB = "smb";
         public static final String SSH = "ssh";
+        public static final String FTP = "ftp";
         public static final int SSH_PORT = 22;
+        public static final int FTP_PORT = 21;
     }
 
     public Server() {
