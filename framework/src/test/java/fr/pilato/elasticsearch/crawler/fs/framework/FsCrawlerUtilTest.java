@@ -40,9 +40,12 @@ import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.compute
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMajorVersion;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMinorVersion;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFileExtension;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFileName;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getFilePermissions;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getGroupName;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getOwnerName;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getServerName;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getRelativePath;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isFileSizeUnderLimit;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.localDateTimeToDate;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -82,6 +85,17 @@ public class FsCrawlerUtilTest extends AbstractFSCrawlerTestCase {
         assumeFalse("This test can not run on Windows.", OsValidator.WINDOWS);
         int permissions = getFilePermissions(file);
         assertThat(permissions, is(700));
+    }
+
+    @Test
+    public void testGetFileName(){
+        assertThat(getFileName("\\test\\test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test.txt"),is("test.txt"));
+        assertThat(getFileName("test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test\\test\\test.txt"),is("test.txt"));
+        assertThat(getFileName("\\test\\test"),is("test"));
+        assertThat(getFileName("\\test"),is("test"));
+        assertThat(getFileName("test"),is("test"));
     }
 
     @Test
@@ -224,4 +238,20 @@ public class FsCrawlerUtilTest extends AbstractFSCrawlerTestCase {
         LocalDateTime now = LocalDateTime.now();
         logger.info("Current Time [{}] in [{}] is actually [{}]", now, TimeZone.getDefault().getDisplayName(), localDateTimeToDate(now));
     }
+
+    @Test
+    public void testGetServerName(){
+        assertThat(getServerName("//desttop-123/test"), is("test"));
+    }
+
+    @Test
+    public void testGetRelativePath(){
+        assertThat(getRelativePath("//desktopName/shareName"), is(""));
+        assertThat(getRelativePath("//desktopName/shareName/test"), is("/test"));
+        assertThat(getRelativePath("//desktopName/shareName/test.txt"), is("/test.txt"));
+        assertThat(getRelativePath("//desktopName/shareName/folder/test.txt"), is("/folder/test.txt"));
+        assertThat(getRelativePath("/shareName"), is(""));
+        assertThat(getRelativePath("/shareName/test"), is("/test"));
+    }
+
 }
