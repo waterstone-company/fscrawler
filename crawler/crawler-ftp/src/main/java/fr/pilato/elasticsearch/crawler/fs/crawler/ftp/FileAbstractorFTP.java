@@ -76,7 +76,6 @@ public class FileAbstractorFTP extends FileAbstractor<FTPFile> {
         }
         try {
             filename = new String(filename.getBytes(FTP.DEFAULT_CONTROL_ENCODING), toEncoding);
-            path = new String(path.getBytes(FTP.DEFAULT_CONTROL_ENCODING), toEncoding);
         } catch (UnsupportedEncodingException e) {
             logger.error("Error during encoding: {}", e.getMessage());
         }
@@ -119,20 +118,19 @@ public class FileAbstractorFTP extends FileAbstractor<FTPFile> {
     @Override
     public void closeInputStream(InputStream inputStream) throws IOException {
         inputStream.close();
-        // This is necessary if we want to read the stream
+        // This is necessary if we want to retrieve multiple streams one by one
         ftp.completePendingCommand();
     }
 
     @Override
     public Collection<FileAbstractModel> getFiles(String dir) throws IOException {
         logger.debug("Listing files from {}", dir);
+        String ftpDir = new String(dir.getBytes(ALTERNATIVE_ENCODING), FTP.DEFAULT_CONTROL_ENCODING);
         if (isUtf8) {
-            dir = new String(dir.getBytes(StandardCharsets.UTF_8), FTP.DEFAULT_CONTROL_ENCODING);
-        } else {
-            dir = new String(dir.getBytes(ALTERNATIVE_ENCODING), FTP.DEFAULT_CONTROL_ENCODING);
+            ftpDir = new String(dir.getBytes(StandardCharsets.UTF_8), FTP.DEFAULT_CONTROL_ENCODING);
         }
 
-        FTPFile[] ftpFiles = ftp.listFiles(dir);
+        FTPFile[] ftpFiles = ftp.listFiles(ftpDir);
         if (ftpFiles == null) return null;
         List<FTPFile> files = Arrays.stream(ftpFiles).filter(file -> {
             if (fsSettings.getFs().isFollowSymlinks()) return true;
@@ -142,13 +140,12 @@ public class FileAbstractorFTP extends FileAbstractor<FTPFile> {
         Collection<FileAbstractModel> result = new ArrayList<>(files.size());
         // Iterate other files
         // We ignore here all files like . and ..
-        String finalDir = dir;
         result.addAll(files.stream().filter(file -> !".".equals(file.getName()) &&
                 !"..".equals(file.getName()))
-                .map(file -> toFileAbstractModel(finalDir, file))
+                .map(file -> toFileAbstractModel(dir, file))
                 .collect(Collectors.toList()));
 
-        logger.debug("{} local files found", result.size());
+        logger.debug("{} files found", result.size());
         return result;
     }
 
@@ -169,11 +166,10 @@ public class FileAbstractorFTP extends FileAbstractor<FTPFile> {
 
     @Override
     public void open() throws IOException {
-        Server server = fsSettings.getServer();
-        logger.debug("Opening FTP connection to {}@{}", server.getUsername(), server.getHostname());
-
         ftp = new FTPClient();
-        ftp.addProtocolCommandListener(ftpListener);
+        if (logger.isTraceEnabled() || logger.isDebugEnabled()) {
+            ftp.addProtocolCommandListener(ftpListener);
+        }
         // send a safe command (i.e. NOOP) over the control connection to reset the router's idle timer
         ftp.setControlKeepAliveTimeout(300);
         openFTPConnection();
@@ -187,6 +183,8 @@ public class FileAbstractorFTP extends FileAbstractor<FTPFile> {
 
     private void openFTPConnection() throws IOException {
         Server server = fsSettings.getServer();
+        logger.debug("Opening FTP connection to {}@{}", server.getUsername(), server.getHostname());
+
         ftp.connect(server.getHostname(), server.getPort());
 
         // checking FTP client connection.
