@@ -62,10 +62,10 @@ public class FsCrawlerValidator {
         // Checking protocol
         if (settings.getServer() != null) {
             if (!Server.PROTOCOL.LOCAL.equals(settings.getServer().getProtocol()) &&
-                    !Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol()) && !Server.PROTOCOL.FTP.equals(settings.getServer().getProtocol())) {
+                    !Server.PROTOCOL.SSH.equals(settings.getServer().getProtocol()) && !Server.PROTOCOL.FTP.equals(settings.getServer().getProtocol()) && !Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol())) {
                 // Non supported protocol
                 logger.error(settings.getServer().getProtocol() + " is not supported yet. Please use " +
-                        Server.PROTOCOL.LOCAL + " or " + Server.PROTOCOL.SSH + " or " + Server.PROTOCOL.FTP + ". Disabling crawler");
+                        Server.PROTOCOL.LOCAL + " or " + Server.PROTOCOL.SSH + " or " + Server.PROTOCOL.FTP + " or " + Server.PROTOCOL.SMB  + ". Disabling crawler");
                 return true;
             }
 
@@ -77,6 +77,10 @@ public class FsCrawlerValidator {
             } else if (Server.PROTOCOL.FTP.equals(settings.getServer().getProtocol()) &&
                 FsCrawlerUtil.isNullOrEmpty(settings.getServer().getUsername())) {
                 logger.error("When using FTP, you need to set a username and probably a password. Disabling crawler");
+                return true;
+            } else if (Server.PROTOCOL.SMB.equals(settings.getServer().getProtocol()) &&
+                    FsCrawlerUtil.isNullOrEmpty(settings.getServer().getUsername())) {
+                logger.error("When using SMB, you need to set a username and probably a password. Disabling crawler");
                 return true;
             }
         }

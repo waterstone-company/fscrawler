@@ -442,6 +442,16 @@ public class FsCrawlerUtil {
         }
     }
 
+    /**
+     * This method is used to get the file/folder name from the path, only for SMB Crawler
+     * because file.getFileInformation().getNameInformation() always equal null
+     * @param uncPath file uncPath
+     * @return fileName
+     */
+    public static String getFileName(String uncPath) {
+        return uncPath.substring(uncPath.lastIndexOf("\\") + 1);
+    }
+
     public static int toOctalPermission(boolean read, boolean write, boolean execute) {
         return (read ? 4 : 0) + (write ? 2 : 0) + (execute ? 1 : 0);
     }
@@ -652,5 +662,30 @@ public class FsCrawlerUtil {
 
     public static String extractMinorVersion(String version) {
         return version.split("\\.")[1];
+    }
+
+    /**
+     * obtain server name through server url（SMB）
+     * @param url serverUrl
+     * @return serverName
+     */
+    public static String getServerName(String url) {
+        return url.split("/")[url.startsWith("//") ? 3 : url.startsWith("/") ? 1 : 0];
+    }
+
+
+    /**
+     * get relative path (SMB)  //desktopName/shareName //desktopName/shareName/test  /shareName  /shareName/test
+     * @param dir dir
+     * @return relative path
+     */
+    public static String getRelativePath(String dir) {
+        String[] path = dir.split("/");
+        if (dir.startsWith("//")) {
+            dir = dir.substring(3 + path[2].length() + path[3].length());
+        } else if (dir.startsWith("/") && path.length >= 2) {
+            dir = dir.substring(1 + path[1].length());
+        }
+        return dir;
     }
 }
