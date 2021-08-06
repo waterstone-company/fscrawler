@@ -238,6 +238,7 @@ public abstract class FsParserAbstract extends FsParser {
         final Collection<FileAbstractModel> children = path.getFiles(filepath);
         Collection<String> fsFiles = new ArrayList<>();
         Collection<String> fsFolders = new ArrayList<>();
+        Collection<String> esFiles = getFileDirectory(filepath);
 
         if (children != null) {
             boolean ignoreFolder = false;
@@ -267,7 +268,8 @@ public abstract class FsParserAbstract extends FsParser {
                             logger.debug("  - file: {}", virtualFileName);
                             fsFiles.add(filename);
                             if (child.getLastModifiedDate().isAfter(lastScanDate) ||
-                                    (child.getCreationDate() != null && child.getCreationDate().isAfter(lastScanDate))) {
+                                    (child.getCreationDate() != null && child.getCreationDate().isAfter(lastScanDate)) ||
+                                    !esFiles.contains(filename)) {
                                 if (isFileSizeUnderLimit(fsSettings.getFs().getIgnoreAbove(), child.getSize())) {
                                     InputStream inputStream = null;
                                     try {
@@ -319,7 +321,6 @@ public abstract class FsParserAbstract extends FsParser {
 
         if (fsSettings.getFs().isRemoveDeleted()) {
             logger.debug("Looking for removed files in [{}]...", filepath);
-            Collection<String> esFiles = getFileDirectory(filepath);
 
             // for the delete files
             for (String esfile : esFiles) {
